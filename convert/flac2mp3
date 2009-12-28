@@ -124,6 +124,5 @@ for f in $OPT_INPUT_DIR/*.flac; do
     fi
 done
 
-
-
+exit 0
 
