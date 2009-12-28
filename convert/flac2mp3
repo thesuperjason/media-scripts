@@ -1,0 +1,129 @@
+#!/bin/bash
+
+# Convert audio in flac format to MP3 with ID3 v2 tags
+# Author: Jason Friedland <thesuperjason@gmail.com>
+
+# Programs
+FLAC=$(which flac 2>/dev/null)
+LAME=$(which lame 2>/dev/null)
+ID3TAG=$(which id3tag 2>/dev/null)
+
+# Defaults
+OPT_INPUT_DIR=$(pwd)
+OPT_OUTPUT_DIR=$(pwd)
+OPT_BITRATE=320
+OPT_DELETE_FILES=false
+
+# Usage
+USAGE="
+Convert audio in flac format to mp3 with ID3 v2 tags.
+
+Synopsis:
+ $0 -a ARTIST -A ALBUM [ OPTIONS ]
+
+REQUIRED:
+ -a, --artist           Album artist.
+ -A, --album            Album name.
+
+OPTIONS:
+ -h, --help             Display this help message.
+ -i, --input-dir        Input directory to be used - defaults to current directory. [ pwd ]
+ -o, --output-dir       Output directory - defaults to current directory. [ pwd ]
+ -b, --bitrate          MP3 ourput bitrate. [ 320 kbps ]
+ -d, --delete-files     Delete flac files following conversion. [ false ]
+ -D, --dry-run          Dry run - show what would be done but don't actually do it. [ false ]
+"
+
+# Option parsing
+while [ "$#" -gt "0" ]; do
+    case "$1" in
+        -i|--input-dir)
+            OPT_INPUT_DIR="$2"
+            shift; shift;
+            ;;
+        -o|--output-dir)
+            OPT_OUTPUT_DIR="$2"
+            shift; shift;
+            ;;
+        -b|--bitrate)
+            OPT_BITRATE="$2"
+            shift; shift;
+            ;;
+        -d|--delete-files)
+            OPT_DELETE_FILES=true
+            shift;
+            ;;
+        -a|--artist)
+            OPT_ARTIST="$2"
+            shift; shift;
+            ;;
+        -A|--album)
+            OPT_ALBUM="$2"
+            shift; shift;
+            ;;
+        -D|--dry-run)
+            OPT_DRY_RUN=true
+            shift;
+            ;;
+        -h|--help|*)
+            echo "$USAGE"
+            exit 1
+            ;;
+    esac
+done
+
+# Required programs
+if [ -z "$FLAC" ]; then
+    echo "ERROR: flac not installed or not found!"
+    exit 2
+fi
+if [ -z "$LAME" ]; then
+    echo "ERROR: lame not installed or not found!"
+    exit 2
+fi
+if [ -z "$ID3TAG" ]; then
+    echo "ERROR: id3v2 not installed or not found!"
+    exit 2
+fi
+
+# Required arguments
+if [ -z "$OPT_ARTIST" ]; then
+    echo "ERROR: no artist specified! Try --help for options."
+    exit 1
+fi
+if [ -z "$OPT_ALBUM" ]; then
+    echo "ERROR: no album specified! Try --help for options."
+    exit 1
+fi
+
+# Start
+for f in $OPT_INPUT_DIR/*.flac; do
+    # File names
+    FLAC_FILE=`basename "$f"`
+    MP3_FILE=`basename "${f%.flac}.mp3"`
+    SONG_TITLE=`basename "${f%.flac}"`
+    # Encoding
+    if [ "$OPT_DRY_RUN" = "true" ]; then
+        echo "Encoding file: '$OPT_INPUT_DIR/$FLAC_FILE' with bitrate: '${OPT_BITRATE}k' to file: '$OPT_OUTPUT_DIR/$MP3_FILE'"
+    else    
+        $FLAC -cd $OPT_INPUT_DIR/"$FLAC_FILE" | $LAME -b $OPT_BITRATE -h - $OPT_OUTPUT_DIR/"$MP3_FILE"
+    fi
+    # ID3 Tagging
+    if [ "$OPT_DRY_RUN" = "true" ]; then
+        echo "Tagging file: '$OPT_OUTPUT_DIR/$MP3_FILE' with artist: '$OPT_ARTIST' album: '$OPT_ALBUM' title: '$SONG_TITLE'"
+    else
+        $ID3TAG -a "$OPT_ARTIST" -A "$OPT_ALBUM" $OPT_OUTPUT_DIR/"$MP3_FILE" -s "$SONG_TITLE"
+    fi
+    # Delete originals
+    if [ "$OPT_DELETE_FILES" = "true" ]; then
+        if [ "$OPT_DRY_RUN" = "true" ]; then
+            echo "Deleting file: '$OPT_INPUT_DIR/$FLAC_FILE'"
+        else
+            rm -f $OPT_INPUT_DIR/"$FLAC_FILE"
+        fi
+    fi
+done
+
+
+
+
