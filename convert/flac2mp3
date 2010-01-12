@@ -100,9 +100,9 @@ fi
 for f in "$OPT_INPUT_DIR"/*.flac; do
     
     # File names
-    FLAC_FILE=`basename "$f"`
-    MP3_FILE=`basename "${f%.flac}.mp3"`
-    SONG_TITLE=`basename "${f%.flac}"`
+    FLAC_FILE=$(basename "$f")
+    MP3_FILE=$(basename "${f%.flac}.mp3")
+    SONG_TITLE=$(basename "${f%.flac}")
     
     # Encoding
     if [ "$OPT_DRY_RUN" = "true" ]; then
