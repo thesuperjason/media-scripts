@@ -9,8 +9,8 @@ LAME=$(which lame 2>/dev/null)
 ID3TAG=$(which id3tag 2>/dev/null)
 
 # Defaults
-OPT_INPUT_DIR=$(pwd)
-OPT_OUTPUT_DIR=$(pwd)
+OPT_INPUT_DIR="$(pwd)"
+OPT_OUTPUT_DIR="$(pwd)"
 OPT_BITRATE=320
 OPT_DELETE_FILES=false
 
@@ -97,32 +97,35 @@ if [ -z "$OPT_ALBUM" ]; then
 fi
 
 # Start
-for f in $OPT_INPUT_DIR/*.flac; do
+for f in "$OPT_INPUT_DIR"/*.flac; do
+    
     # File names
     FLAC_FILE=`basename "$f"`
     MP3_FILE=`basename "${f%.flac}.mp3"`
     SONG_TITLE=`basename "${f%.flac}"`
+    
     # Encoding
     if [ "$OPT_DRY_RUN" = "true" ]; then
         echo "Encoding file: '$OPT_INPUT_DIR/$FLAC_FILE' with bitrate: '${OPT_BITRATE}k' to file: '$OPT_OUTPUT_DIR/$MP3_FILE'"
     else    
-        $FLAC -cd $OPT_INPUT_DIR/"$FLAC_FILE" | $LAME -b $OPT_BITRATE -h - $OPT_OUTPUT_DIR/"$MP3_FILE"
+        $FLAC -cd "$OPT_INPUT_DIR"/"$FLAC_FILE" | $LAME -b $OPT_BITRATE -h - "$OPT_OUTPUT_DIR"/"$MP3_FILE"
     fi
+    
     # ID3 Tagging
     if [ "$OPT_DRY_RUN" = "true" ]; then
         echo "Tagging file: '$OPT_OUTPUT_DIR/$MP3_FILE' with artist: '$OPT_ARTIST' album: '$OPT_ALBUM' title: '$SONG_TITLE'"
     else
-        $ID3TAG -a "$OPT_ARTIST" -A "$OPT_ALBUM" $OPT_OUTPUT_DIR/"$MP3_FILE" -s "$SONG_TITLE"
+        $ID3TAG -a "$OPT_ARTIST" -A "$OPT_ALBUM" "$OPT_OUTPUT_DIR"/"$MP3_FILE" -s "$SONG_TITLE"
     fi
+    
     # Delete originals
     if [ "$OPT_DELETE_FILES" = "true" ]; then
         if [ "$OPT_DRY_RUN" = "true" ]; then
             echo "Deleting file: '$OPT_INPUT_DIR/$FLAC_FILE'"
         else
-            rm -f $OPT_INPUT_DIR/"$FLAC_FILE"
+            rm -f "$OPT_INPUT_DIR"/"$FLAC_FILE"
         fi
     fi
 done
 
 exit 0
-
