@@ -1,0 +1,15 @@
+#!/bin/bash
+
+INPUT=$1
+OUTPUT=$2
+
+if [ -z "$INPUT" ]; then
+    exit 1
+fi
+
+if [ -z "$OUTPUT" ]; then
+    OUTPUT="${INPUT%.mkv}.mp4"
+fi
+
+/usr/bin/ffmpeg -i "$INPUT" -vcodec copy -acodec libfaac -sameq "$OUTPUT"
+
